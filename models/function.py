@@ -4,7 +4,6 @@ from typing import Optional, List, Dict, Any
 from .code_element import CodeElement
 from .semantic_nodes import ElementType, ElementKind
 from .syntax_nodes import FunctionNodeInfo
-from models.enums import ElementType, ElementKind
 
 
 @dataclass
@@ -54,6 +53,13 @@ class FunctionElement(CodeElement):
     calls: List[str] = field(default_factory=list)
     called_by: List[str] = field(default_factory=list)
 
+    def __post_init__(self):
+        if not hasattr(self, 'id') or not getattr(self, 'id', None):
+            self.id = f"{self.module_path or 'unknown'}:{self.name}"
+        if not hasattr(self, 'qualified_name') or not getattr(self, 'qualified_name', None):
+            self.qualified_name = f"{self.module_path}.{self.name}" if self.module_path else self.name
+
+
     @classmethod
     def from_syntax_node(
         cls,
@@ -66,17 +72,10 @@ class FunctionElement(CodeElement):
         is_method = parent_id is not None
         decorators = set(node_info.decorator_names)
 
-        element_kind = ElementKind.FUNCTION
-        if is_method:
-            element_kind = ElementKind.METHOD
-            if "staticmethod" in decorators:
-                element_kind = ElementKind.STATICMETHOD
-            elif "classmethod" in decorators:
-                element_kind = ElementKind.CLASSMETHOD
-            elif "property" in decorators:
-                element_kind = ElementKind.PROPERTY
-            if node_info.name == "__init__":
-                element_kind = ElementKind.CONSTRUCTOR
+        element_kind = ElementKind.DECLARATION
+
+        if node_info.name == "__init__":
+            element_kind = ElementKind.DEFINITION
 
         parameters = [
             ParameterSignature(
@@ -96,10 +95,8 @@ class FunctionElement(CodeElement):
             is_async=node_info.is_async
         )
 
-        return cls(
-            id=element_id,
+        element = cls(
             name=node_info.name,
-            qualified_name=qualified_name,
             element_type=ElementType.METHOD if is_method else ElementType.FUNCTION,
             element_kind=element_kind,
             location=node_info.location,
@@ -108,12 +105,15 @@ class FunctionElement(CodeElement):
             parent_id=parent_id,
             signature=signature,
             is_method=is_method,
-            is_static=element_kind == ElementKind.STATICMETHOD,
+            is_static=getattr(element_kind, 'name', '') == "STATICMETHOD",
             is_class_method=element_kind == ElementKind.CLASSMETHOD,
             is_property=element_kind == ElementKind.PROPERTY,
             is_constructor=element_kind == ElementKind.CONSTRUCTOR,
             decorators=node_info.decorator_names
         )
+
+        element.id = element_id
+        return element
 
     def to_dict(self) -> Dict[str, Any]:
         result = super().to_dict()
@@ -159,3 +159,12 @@ class FunctionElement(CodeElement):
             self.search_tokens.add(self.signature.return_type.lower())
         for decorator in self.decorators:
             self.search_tokens.add(decorator.lower())
+
+    @property
+    def type(self):
+        return self.element_type.value if hasattr(self, "element_type") else "unknown"
+
+    @property
+    def is_module_level(self) -> bool:
+        """Returns True if the function is defined at module level."""
+        return self.parent_name is None
