@@ -1,73 +1,55 @@
-# models/base.py
-from enum import Enum, auto
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any, Set
-from pathlib import Path
+import ast
+import hashlib
+from typing import Any, Dict, List
 
+class ElementNormalizer:
+    """Normalizes code elements (functions, classes) for deduplication comparison."""
 
-class ElementType(Enum):
-    """Types of code elements that can be indexed."""
-    MODULE = auto()
-    CLASS = auto()
-    FUNCTION = auto()
-    METHOD = auto()
-    IMPORT = auto()
-    VARIABLE = auto()
-    EXPRESSION = auto()
+    def _normalize_class_element(self, class_element: Any) -> Dict[str, Any]:
+        """Create a normalized representation of a ClassElement."""
+        try:
+            class_ast = ast.parse(class_element.body).body[0]
+        except (SyntaxError, IndexError):
+            # Fallback if parsing fails
+            return {
+                "base_classes": [str(base) for base in class_element.bases],
+                "body_hash": hashlib.sha256(class_element.body.encode('utf-8')).hexdigest()
+            }
 
+        return {
+            "base_classes": [str(base) for base in class_element.bases],
+            "decorators": self._normalize_decorators(getattr(class_element, "decorators", [])),
+            "method_signatures": self._normalize_method_signatures(class_element),
+            "class_variables": self._normalize_class_variables(class_element),
+            "ast_structure": self._normalize_class_ast(class_ast),
+        }
 
-class ElementKind(Enum):
-    """More specific classification of code elements."""
-    # Module kinds
-    PACKAGE = auto()
-    MODULE = auto()
-    
-    # Class kinds
-    CLASS = auto()
-    DATACLASS = auto()
-    ENUM = auto()
-    EXCEPTION = auto()
-    NAMEDTUPLE = auto()
-    
-    # Function kinds
-    FUNCTION = auto()
-    METHOD = auto()
-    CLASSMETHOD = auto()
-    STATICMETHOD = auto()
-    PROPERTY = auto()
-    CONSTRUCTOR = auto()
-    
-    # Import kinds
-    IMPORT = auto()
-    FROM_IMPORT = auto()
-    
-    # Variable kinds
-    CONSTANT = auto()
-    VARIABLE = auto()
-    INSTANCE_VARIABLE = auto()
-    CLASS_VARIABLE = auto()
+    def _normalize_method_signatures(self, class_element: Any) -> Dict[str, str]:
+        """Normalize method signatures within a class."""
+        method_sigs = {}
+        for method in getattr(class_element, "methods", []):
+            method_sigs[method.name] = self._normalize_signature(method)
+        return method_sigs
 
+    def _normalize_class_variables(self, class_element: Any) -> List[Dict[str, Any]]:
+        """Normalize class variables."""
+        variables = []
+        for var in getattr(class_element, "class_variables", []):
+            variables.append({
+                "name": var.name,
+                "annotation": str(var.annotation) if hasattr(var, "annotation") and var.annotation else None,
+                "has_value": hasattr(var, "value") and var.value is not None
+            })
+        return variables
 
-@dataclass
-class Location:
-    """Represents a location in source code."""
-    file_path: Path
-    line_start: int
-    line_end: int
-    column_start: Optional[int] = None
-    column_end: Optional[int] = None
-    
-    def __str__(self) -> str:
-        """String representation of the location."""
-        if self.column_start is not None and self.column_end is not None:
-            return f"{self.file_path}:{self.line_start}:{self.column_start}-{self.line_end}:{self.column_end}"
-        return f"{self.file_path}:{self.line_start}-{self.line_end}"
+    def _normalize_decorators(self, decorators: List[Any]) -> List[str]:
+        """Extract decorator names as strings."""
+        return [getattr(decorator, "name", str(decorator)) for decorator in decorators]
 
+    def _normalize_class_ast(self, class_ast_node: ast.AST) -> str:
+        """Generate a normalized AST structure string."""
+        return ast.dump(class_ast_node)
 
-@dataclass
-class BaseModel:
-    """Base class for all models."""
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary representation."""
-        raise NotImplementedError("Subclasses must implement to_dict")
+    def _normalize_signature(self, method: Any) -> str:
+        """Simple placeholder normalization of method signature."""
+        return f"{method.name}({','.join(str(p) for p in getattr(method, 'parameters', []))})"
