@@ -1,8 +1,8 @@
+
 from typing import List, Optional
 import ast
 from models.function import FunctionSignature, ParameterSignature, FunctionElement
 from models.semantic_nodes import ElementType
-
 
 
 class ASTParser:
@@ -66,3 +66,48 @@ class FunctionVisitor(ast.NodeVisitor):
             is_property=False
         )
         self.elements[node.name] = function_element
+
+
+# --- Semantic Trait Extension Visitor ---
+
+class OverrideDetectionVisitor(ast.NodeVisitor):
+    def __init__(self, indexer):
+        self.indexer = indexer
+
+    def analyze(self, element):
+        """Analyze a function to determine if it overrides a method in a base class."""
+        if element.type != 'function' or not hasattr(element, 'parent'):
+            return {'is_override': False}
+
+        parent_class = element.parent
+        if parent_class.type != 'class':
+            return {'is_override': False}
+
+        base_classes = self.get_base_classes(parent_class)
+        method_name = element.name
+
+        for base_class in base_classes:
+            if self.has_method(base_class, method_name):
+                return {
+                    'is_override': True,
+                    'overrides': f"{base_class.name}.{method_name}",
+                    'base_class': base_class.name
+                }
+
+        return {'is_override': False}
+
+    def get_base_classes(self, class_element):
+        if not hasattr(class_element, 'base_classes'):
+            return []
+        bases = []
+        for base_name in class_element.base_classes:
+            if base_name in self.indexer.class_index:
+                bases.append(self.indexer.class_index[base_name])
+        return bases
+
+    def has_method(self, class_element, method_name):
+        if hasattr(class_element, 'methods'):
+            for method in class_element.methods:
+                if method.name == method_name:
+                    return True
+        return False
