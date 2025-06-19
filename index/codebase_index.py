@@ -11,7 +11,6 @@ import threading
 from collections import defaultdict
 import re
 import time
-
 from models import CodeElement, ElementType
 from parser import ASTParser
 
