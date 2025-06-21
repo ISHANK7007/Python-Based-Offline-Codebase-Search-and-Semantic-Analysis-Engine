@@ -6,17 +6,12 @@ from pathlib import Path
 from typing import Optional, Dict, Any, Callable, Tuple, Union, List
 from dataclasses import dataclass
 from contextlib import contextmanager
-from parser.visitor import CodeElementExtractor
-
-from models.code_element import CodeElement, ElementKind, ElementType
-
+from parser.visitor import ASTParser
+from models.code_element import CodeElement
 from scanner.file_scanner import FileCrawler
-
-
 
 @dataclass
 class ParsingError:
-    """Represents an error encountered during parsing."""
     file_path: Path
     error_type: str
     error_message: str
@@ -26,7 +21,6 @@ class ParsingError:
     code_snippet: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization."""
         return {
             "file": str(self.file_path),
             "error_type": self.error_type,
@@ -37,10 +31,7 @@ class ParsingError:
             "code_snippet": self.code_snippet
         }
 
-
 class SafeParser:
-    """Safely parse Python files into AST, handling and logging errors."""
-
     def __init__(
         self,
         logger: Optional[logging.Logger] = None,
@@ -62,9 +53,7 @@ class SafeParser:
         logger.setLevel(logging.INFO)
         if not logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             handler.setFormatter(formatter)
             logger.addHandler(handler)
         return logger
@@ -92,25 +81,14 @@ class SafeParser:
         except Exception as e:
             self._handle_generic_error(file_path, e)
         return None
-    def visit(self, tree: ast.AST, file_path: Optional[Path] = None) -> List[CodeElement]:
-        if file_path is None:
-            file_path = Path("unknown_file.py")
-        module_path = file_path.stem.replace(".py", "")
-        extractor = CodeExtractor(file_path=file_path, module_path=module_path)
-        return list(extractor.extract_elements(tree).values())  # ✅ Must return CodeElement objects
 
-
-        def parse_code(self, code: str, filename: str = "<string>") -> Optional[ast.AST]:
-            try:
-                with self._custom_recursion_limit():
-                    return ast.parse(code, filename=filename)
-            except SyntaxError as e:
-                self._handle_syntax_error(Path(filename), e, code)
-            except RecursionError as e:
-                self._handle_recursion_error(Path(filename), e)
-            except Exception as e:
-                self._handle_generic_error(Path(filename), e)
-            return None
+    def safe_parse_file(self, file_path: Path) -> List[CodeElement]:
+        """Safely parse file and extract CodeElement objects using ASTParser."""
+        tree = self.parse_file(file_path)
+        if tree is None:
+            return []
+        parser = ASTParser()
+        return parser.parse(tree, file_path=str(file_path))
 
     def _get_code_snippet(self, code: str, line_number: int) -> str:
         if not code or not self.capture_code_snippets:
@@ -174,27 +152,3 @@ class SafeParser:
     def clear_errors(self) -> None:
         if self.errors is not None:
             self.errors.clear()
-
-
-# Convenience Functions
-
-def parse_file_safely(
-    file_path: Union[str, Path],
-    logger: Optional[logging.Logger] = None
-) -> Tuple[Optional[ast.AST], Optional[ParsingError]]:
-    parser = SafeParser(logger=logger, collect_errors=True)
-    path = Path(file_path) if isinstance(file_path, str) else file_path
-    tree = parser.parse_file(path)
-    errors = parser.get_errors()
-    return tree, errors[0] if errors else None
-
-
-def parse_directory_safely(
-    directory: Union[str, Path],
-    logger: Optional[logging.Logger] = None
-) -> Dict[Path, Optional[ast.AST]]:
-    parser = SafeParser(logger=logger)
-    dir_path = Path(directory) if isinstance(directory, str) else directory
-    crawler = FileCrawler()
-    files = crawler.scan_directory(str(dir_path))
-    return {Path(f): parser.parse_file(Path(f)) for f in files}
