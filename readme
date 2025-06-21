@@ -1,0 +1,133 @@
+# Python-Based Offline Codebase Search and Semantic Analysis Engine
+
+## Project Objective
+
+This project implements a robust, offline Python codebase analysis engine capable of recursively scanning, parsing, semantically indexing, and querying large repositories. It supports AST-based enrichment, semantic diffing, role classification, Git blame integration, and a powerful CLI interface. It was developed in 8 tightly connected conversations using a prompt-driven development methodology.
+
+---
+
+## Code Execution Screenshots
+
+### Conversation 1: Execution Output  
+![Conversation 1 Execution](https://drive.google.com/file/d/10_L_4z9kBV7rjB78Mweoeyw0qsxbHRju/view?usp=drive_link)
+
+### Conversation 2: Execution Output  
+![Conversation 2 Execution](https://drive.google.com/file/d/1MzBNG2ALErLoQepxPQa6MDprQQRjxDdp/view?usp=drive_link)
+
+### Conversation 3: Execution Output  
+![Conversation 3 Execution](https://drive.google.com/file/d/1FjDUJLK2MP9f7v9KsX5EZuS0uDDbvzKF/view?usp=drive_link)
+
+### Conversation 4: Execution Output  
+![Conversation 4 Execution](https://drive.google.com/file/d/1LQGCPjqu6wlWQowzC8FbYegn7qVGkpPG/view?usp=drive_link)
+
+### Conversation 5: Execution Output  
+![Conversation 5 Execution](https://drive.google.com/file/d/1OhlsllHYWcYwVdpIOOliJRIMXj-lEs_r/view?usp=drive_link)
+
+### Conversation 6: Execution Output  
+![Conversation 6 Execution](https://drive.google.com/file/d/1qQHe2O5kLS0HdVtTKRUFGqS8PHv6G1WE/view?usp=drive_link)
+
+### Conversation 7: Execution Output  
+![Conversation 7 Execution](https://drive.google.com/file/d/1_fk6Az7KUI3lk6aBEYQOVHUArcO2sX5m/view?usp=drive_link)
+
+### Conversation 8: Execution Output  
+![Conversation 8 Execution](https://drive.google.com/file/d/1lttwRH-dn3PLwCJf1-BB4QpAsCA8FYuQ/view?usp=drive_link)
+
+---
+
+## Unit Test Outputs and Coverage
+
+### Conversation 1 Test Results
+- **Test 1**: Scanner excludes hidden folders, symbolic links, and virtual environments unless enabled.
+- **Test 2**: Parser recovers valid functions from partially corrupted Python files.
+  ![Conversation 1 Tests](https://drive.google.com/file/d/1efrpVp5CImtNVPAz-CaN4vfNoBPfwsAa/view?usp=drive_link)
+
+### Conversation 2 Test Results
+- **Test 1**: Enrich decorators and roles for @admin_required, @custom_logger, and main().
+- **Test 2**: Handle nested closures and tag captured variables and parent scopes.
+  ![Conversation 2 Tests](https://drive.google.com/file/d/1gXpSqwlQsyV1g5Csn1EHP2cJ1SanPJC7/view?usp=drive_link)
+
+### Conversation 3 Test Results
+- **Test 1**: Index multiple files and validate queries by role and type.
+- **Test 2**: Reload index from disk and verify hash stability.
+  ![Conversation 3 Tests](https://drive.google.com/file/d/1BNE-Vb3njhEua4mM9hLL5gwvOPTIznMY/view?usp=drive_link)
+
+### Conversation 4 Test Results
+- **Test 1**: Role-based and docstring-based filters on large indexes.
+- **Test 2**: Fuzzy name search retrieves misspelled candidates accurately.
+  ![Conversation 4 Tests](https://drive.google.com/file/d/1yBrcSKQh6phQjMCpNFoIqMFJZUL4Oj3l/view?usp=drive_link)
+
+### Conversation 5 Test Results
+- **Test 1**: CLI `search` lists matching functions with summary mode.
+- **Test 2**: CLI `describe` returns semantic metadata for a symbol.
+  ![Conversation 5 Tests](https://drive.google.com/file/d/1mmvbQwr46zREmW4TLBlCS-OTwY97jUdU/view?usp=drive_link)
+
+### Conversation 6 Test Results
+- **Test 1**: Preview snippet of auth.handle_login in CLI output.
+- **Test 2**: Semantic diff detects decorator and return type changes.
+  ![Conversation 6 Tests](https://drive.google.com/file/d/1VYhV3aiVWvxI0KKNYpvdWIwZsLxGvGZ8/view?usp=drive_link)
+
+### Conversation 7 Test Results
+- **Test 1**: Blame output shows commit hash, author, and timestamp.
+- **Test 2**: Since filter returns functions modified in the last 3 days.
+  ![Conversation 7 Tests](https://drive.google.com/file/d/1dsmmITczTym8Jc0CD7OSiuiwv1glCxXU/view?usp=drive_link)
+
+### Conversation 8 Test Results
+- **Test 1**: Snapshot test for CLI search matches golden file.
+- **Test 2**: Benchmark index performance on large repo.
+  ![Conversation 8 Tests](https://drive.google.com/file/d/1k3fJvJ06fTl9LkQd--a1d0m2RFhHS5YA/view?usp=drive_link)
+
+---
+
+## Project Features Mapped to Conversations
+
+- **Conversation 1**: File scanner, AST parser, CodeElement abstraction, safe fallback strategies
+- **Conversation 2**: Semantic enrichment, decorator metadata, closure resolution, FunctionCallGraph
+- **Conversation 3**: CodebaseIndex with role/decorator lookup, persistent caching, deduplication
+- **Conversation 4**: QueryEngine with fuzzy, regex filters, CLI-compatible query DSL
+- **Conversation 5**: CLI interface with search/describe/summarize, pagination, error handling
+- **Conversation 6**: Snippet preview, semantic diff engine, decorator diff detection
+- **Conversation 7**: Git blame and commit history tracking, --blame and --since support
+- **Conversation 8**: Snapshot testing, indexing benchmarks, regression protection
+
+---
+
+# Semantic Indexing Simulation Inputs
+
+## Directory: `mockpackage/`
+This directory contains Python modules designed to simulate real-world Python code for evaluating the semantic indexing engine. These files exercise decorators, nested scopes, role inference, and return types, and are intended to validate symbol parsing, CLI search queries, and semantic diffing across versions.
+
+### Files Included:
+- `user_service.py` → Flask route with stacked decorators (`@login_required`, `@rate_limit`) returning a JSON profile.
+- `payment_tasks.py` → Celery-style background task using `@shared_task` to send payment failure notifications.
+- `analytics/reporting.py` → Parses a CSV and summarizes numeric categories using nested functions and parent scope references.
+- `admin/users.py` → Real admin-protected user deletion using SQLAlchemy, logging, and docstring typing.
+| `user_service.py` | This file tests stacked decorators, Flask route detection, return type and docstring extraction.
+- File: mockpackage/user_service.py
+- Scenario: JSON profile view for authenticated users.
+- Expected behavior: Function is tagged with `entrypoint`, `login_required`, `rate_limit`.
+- Purpose: Index and retrieve with decorator and docstring filters. | ![user_service](https://drive.google.com/file/d/19RDZa495hQNd2tN4wkNBbzwvSUmRM-7b/view?usp=drive_link) |
+| `payment_tasks.py` | Simulates a background task that sends emails on payment failures.
+- File: mockpackage/payment_tasks.py
+- Scenario: Celery-style shared task.
+- Expected behavior: Function is detected with unresolved decorator (`shared_task`) and call to external service.
+- Purpose: Test async task indexing and decorator fallback. | ![payment_tasks](https://drive.google.com/file/d/1rCA276RX1iDP5AI72s9TbAuzHUdNdDUH/view?usp=drive_link) |
+| `analytics/reporting.py` | Summarizes sales data using nested `summarize()` and aggregates CSV data.
+- File: mockpackage/analytics/reporting.py
+- Scenario: Nested function with closure and config-aware summarization.
+- Expected behavior: Function is indexed with parent linkage and captured variable reference.
+- Purpose: Validate closure resolution, metadata attachment, and semantic doc parsing. | ![reporting]https://drive.google.com/file/d/1aeN7V5zr54BiNo5oNzDvIfwNZ61sqABU/view?usp=drive_link) |
+| `admin/users.py` | Real user deletion handler with SQLAlchemy + admin decorator.
+- File: mockpackage/admin/users.py
+- Scenario: Soft/hard deletion of user with docstring typing, logging, and role-based protection.
+- Expected behavior: Function is indexed with `admin_required`, return type `bool`, and deletion logging.
+- Purpose: Enable filtering by role, decorator, docstring, and semantic diff. | ![users](https://drive.google.com/file/d/1tgcmdNDDeuPOvKiYj2dykr4msyJe_Jhy/view?usp=drive_link) |
+
+### Usage:
+Run each module to simulate meaningful symbol definitions:
+
+```bash
+# Navigate to project root and run:
+python mockpackage/user_service.py
+python mockpackage/payment_tasks.py
+python mockpackage/analytics/reporting.py
+python mockpackage/admin/users.py
